@@ -3,6 +3,15 @@
 #include common_scripts\utility;
 #include maps\mp\gametypes\_globallogic_score;
 
+#include maps\mp\gametypes\_class;
+#include maps\mp\gametypes\_globallogic_player;
+#include maps\mp\gametypes\_spectating;
+#include maps\mp\gametypes\_globallogic;
+#include maps\mp\gametypes\_pregame;
+#include maps\mp\teams\_teams;
+#include maps\mp\bots\_bot;
+#include maps\mp\killstreaks\_killstreaks;
+
 init()
 {
 	level.clientid = 0;
@@ -187,6 +196,10 @@ onPlayerSpawned()
 		//self checkGivenPerks();
 		//self giveEssentialPerks();
 		//self thread waitChangeClassGiveEssentialPerks();
+		for (i = 0; i < self.killstreak.size; i++)
+		{
+			self iprintln(self.killstreak[i]);
+		}
 	}
 }
 
@@ -364,16 +377,9 @@ buildMenu()
 
 	//start class
 	/*m = "MainClass";
-	self addMenu(m, "ClassWeapon", "^5Weapon Selector");
-	self addMenu(m, "ClassGrenades", "^5Grenade Selector");
 	self addMenu(m, "ClassCamo", "^5Camo Selector");
-	self addMenu(m, "ClassPerk", "^5Perk Selector");
-	self addMenu(m, "ClassEquipment", "^5Equipment Selector");
 	self addMenu(m, "ClassTacticals", "^5Tacticals Selector");
-	self addMenu(m, "ClassKillstreaks", "^5Killstreak Menu");
-
-	self buildWeaponMenu();
-	self buildClassMenu();*/
+	self addMenu(m, "ClassKillstreaks", "^5Killstreak Menu");*/
 	//end class
 
 	//start lobby
@@ -1079,11 +1085,11 @@ vectorScale(vec, scale)
 	return vec;
 }
 
-onPlayerDamageHook(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
+onPlayerDamageHook(eInflictor, eAttacker, iDamage, idFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime, boneIndex)
 {
-	if (sMeansOfDeath != "MOD_TRIGGER_HURT" && sMeansOfDeath != "MOD_FALLING" && sMeansOfDeath != "MOD_SUICIDE") 
+	if (sMeansOfDeath != "MOD_TRIGGER_HURT" && sMeansOfDeath != "MOD_FALLING" && sMeansOfDeath != "MOD_SUICIDE")
 	{
-		if (/*maps\mp\gametypes\_missions::getWeaponClass( sWeapon ) == "weapon_sniper" || */true)
+		if (getWeaponClass(sWeapon) == "weapon_sniper")
 		{
 			if (level.currentGametype == "sd" || level.currentGametype == "dm" || level.tdmUnlimitedDmg)
 			{
@@ -1094,7 +1100,7 @@ onPlayerDamageHook(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeap
 				iDamage += 10;
 			}
 		}
-		else 
+		else
 		{
 			iDamage -= 5;
 
@@ -1112,8 +1118,8 @@ onPlayerDamageHook(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeap
 	{
 		self.attackers = undefined;
 	}
-
-	[[level.onPlayerDamageStub]](eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
+	
+	[[level.onPlayerDamageStub]](eInflictor, eAttacker, iDamage, idFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime, boneIndex);
 }
 
 enterUfoMode()
@@ -1474,14 +1480,28 @@ fastLast()
 	{
 		self.kills = 29;
 		self.pers["kills"] = 29;
-		self _setPlayerScore(self, 29);
-		self iprintln("fast last ^2given");
+		self.score = 2900;
+		self.pers["score"] = 2900;
+		_setplayerscore(self, 2900);
+		self givepointstowin(29);
+		self iprintln("Fast last ^2given");
 	}
 	else if (level.currentGametype == "tdm")
 	{
 		self _setTeamScore(self.pers["team"], 74);
-		self iprintln("fast last ^2given");
+		self iprintln("Fast last ^2given");
 	}
+}
+
+givePlayerFastLast(player)
+{
+	self.kills = 29;
+		player.pers["kills"] = 29;
+		player.score = 2900;
+		player.pers["score"] = 2900;
+		_setplayerscore(player, 2900);
+		player givepointstowin(29);
+		player iprintln("Fast last ^2given");
 }
 
 changeMyTeam(assignment)
@@ -1687,13 +1707,6 @@ hasGhostPro()
 customSayTeam(msg)
 {
 	self sayTeam(msg);
-}
-
-givePlayerFastLast(player)
-{
-	player.kills = 29;
-	player.pers["kills"] = 29;
-	player _setPlayerScore(player, 29);
 }
 
 toggleForceHost()
@@ -2024,4 +2037,6 @@ testFastRestart()
 {
 	map_restart(false);
 }
+
+
 
